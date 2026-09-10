@@ -40,4 +40,7 @@ export default [
   { name: 'ChunRen Zhang', link: 'https://github.com/rayatn1011' },
   { name: 'Barış Uzun', link: 'https://github.com/barisuzunn' },
   { name: 'Hwang In-wook', link: 'https://github.com/wooklab' },
+  { name: 'synsa', link: 'https://github.com/synsa' },
+  { name: 'beyond-infra', link: 'https://github.com/beyond-infra' },
+  { name: 'Chen, Ting-An', link: 'https://github.com/nrps9909' },
 ]

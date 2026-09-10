@@ -1,7 +1,8 @@
 import events from '@common/events'
 import { AppDownloadedUpdateInfo, AppUpdateInfo, AppUpdateProgress } from '@common/update'
-import { Button, Group, Modal, Progress, Stack, Text } from '@mantine/core'
-import { actions } from '@renderer/core/agent'
+import { Button, Group, Modal, Progress, ScrollArea, Stack, Text } from '@mantine/core'
+import { actions, agent } from '@renderer/core/agent'
+import { getFriendlyUpdateErrorMessage, showErrorNotification } from '@renderer/core/notify'
 import useOnBroadcast from '@renderer/core/useOnBroadcast'
 import useI18n from '@renderer/models/useI18n'
 import { useState } from 'react'
@@ -48,6 +49,9 @@ const UpdateDialog = () => {
     setOpened(true)
   })
 
+  const downloadButtonLabel =
+    agent.platform === 'win32' ? lang.update_download_and_install_now : lang.update_download_now
+
   const onClose = () => {
     if (stage === 'downloading' || isInstalling) {
       return
@@ -69,7 +73,10 @@ const UpdateDialog = () => {
     } catch (error) {
       console.error(error)
       setStage('available')
-      alert(error instanceof Error ? error.message : String(error))
+      showErrorNotification({
+        title: downloadButtonLabel,
+        message: getFriendlyUpdateErrorMessage(error, lang, lang.fail),
+      })
     }
   }
 
@@ -81,7 +88,10 @@ const UpdateDialog = () => {
     } catch (error) {
       console.error(error)
       setIsInstalling(false)
-      alert(error instanceof Error ? error.message : String(error))
+      showErrorNotification({
+        title: lang.update_install_now,
+        message: getFriendlyUpdateErrorMessage(error, lang, lang.update_error_install),
+      })
     }
   }
 
@@ -113,9 +123,19 @@ const UpdateDialog = () => {
         </Text>
 
         {updateInfo.releaseNotes ? (
-          <Text size="xs" c="dimmed" style={{ whiteSpace: 'pre-wrap' }} lineClamp={6}>
-            {updateInfo.releaseNotes}
-          </Text>
+          // Release notes can be a full changelog, so cap the height and let the
+          // body scroll instead of truncating. Because the scroll area is bounded
+          // the modal never grows tall enough to push the title or the footer
+          // buttons out of view.
+          <ScrollArea.Autosize mah="40vh" scrollbars="y" type="auto">
+            <Text
+              size="xs"
+              c="dimmed"
+              style={{ whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}
+            >
+              {updateInfo.releaseNotes}
+            </Text>
+          </ScrollArea.Autosize>
         ) : null}
 
         {isDownloading ? (
@@ -135,7 +155,7 @@ const UpdateDialog = () => {
           ) : null}
 
           {stage === 'available' ? (
-            <Button onClick={onDownload}>{lang.update_download_now}</Button>
+            <Button onClick={onDownload}>{downloadButtonLabel}</Button>
           ) : null}
 
           {stage === 'downloaded' ? (
